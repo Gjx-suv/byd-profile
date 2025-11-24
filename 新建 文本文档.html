@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOMINANCE | 哲学与力量</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;500;800&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #121212;
+            --text-main: #e0e0e0;
+            --gold: #d4af37; /* 领袖金 */
+            --gold-dim: #8a7022;
+            --accent: #c0c0c0;
+            --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* 隐藏默认鼠标，使用自定义 */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Montserrat', 'Noto Serif SC', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* 自定义光标 */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--gold);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+        .cursor-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* 导航 */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 2px;
+        }
+
+        .audio-toggle {
+            color: var(--gold);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .audio-toggle:hover {
+            text-shadow: 0 0 10px var(--gold);
+        }
+
+        /* 通用部分样式 */
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+            position: relative;
+        }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 50px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: var(--transition);
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #aaa;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        /* HERO SECTION */
+        #hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), 
+                        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop') no-repeat center center/cover;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #fff, #999);
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: glow 3s infinite alternate;
+        }
+
+        .hero-subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .btn-gold {
+            padding: 15px 40px;
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gold::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gold);
+            transition: var(--transition);
+            z-index: -1;
+        }
+
+        .btn-gold:hover {
+            color: #000;
+        }
+
+        .btn-gold:hover::before {
+            left: 0;
+        }
+
+        /* PHILOSOPHY SECTION */
+        #philosophy {
+            background: #0a0a0a;
+        }
+
+        .quote-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 40px;
+            border: 1px solid #222;
+            position: relative;
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+            transform: translateY(-10px);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-family: 'Cinzel', serif;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        /* FITNESS SECTION */
+        #fitness {
+            background: #050505;
+            /* 噪点纹理 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 50px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--gold);
+            display: block;
+        }
+
+        .stat-label {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #666;
+        }
+
+        /* LEADERSHIP / CONTACT */
+        #leadership {
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            text-align: center;
+        }
+
+        .signature {
+            font-family: 'Great Vibes', cursive; /* 假如没有导入，会回退 */
+            font-size: 2rem;
+            color: var(--gold);
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+
+        /* 动画类 */
+        .visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+            to { text-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 10px var(--gold); }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 3rem; }
+            h2 { font-size: 2rem; }
+            .stats-container { flex-direction: column; gap: 30px; }
+            nav { padding: 20px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 音效文件 (占位符，建议替换为实际的短音效URL) -->
+    <!-- 建议音效：悬停是低沉的 'click'，背景是深沉的 'drone' 氛围音 -->
+    <audio id="hoverSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio> 
+    
+    <!-- 自定义光标 -->
+    <div class="cursor"></div>
+    <div class="cursor-dot"></div>
+
+    <nav>
+        <div class="logo">ALEXANDER.</div>
+        <div class="audio-toggle" onclick="toggleMusic()">
+            <i class="fas fa-volume-mute" id="musicIcon"></i>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <h1 class="hero-title">Iron & Soul</h1>
+        <div class="hero-subtitle">The Philosopher King</div>
+        <button class="btn-gold interactable" onclick="scrollToSection('philosophy')">Explore The Path</button>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section id="philosophy">
+        <h2 class="reveal">Philosophy</h2>
+        <div class="quote-container">
+            <div class="card interactable reveal">
+                <div class="card-icon"><i class="fas fa-brain"></i></div>
+                <h3>Stoicism</h3>
+                <p>"We suffer more often in imagination than in reality." — Seneca. 掌控心智，即掌控一切。</p>
+            </div>
+            <div class="card interactable reveal" style="transition-delay: 0.2s">
+                <div class="card-icon"><i class="fas fa-balance-scale"></i></div>
+                <h3>Discipline</h3>
+                <p>自律不是限制，而是切断平庸的利刃。真正的自由源于绝对的自律。</p>
+            </div>
+            <div class="card interactable reveal" style="transition-delay: 0.4s">
+                <div class="card-icon"><i class="fas fa-chess-king"></i></div>
+                <h3>Leadership</h3>
+                <p>领袖不只是发号施令，而是成为那道光。以身作则，行胜于言。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fitness Section -->
+    <section id="fitness">
+        <h2 class="reveal">Physique</h2>
+        <p class="reveal">身体是灵魂的圣殿。雕刻肌肉，即是雕刻意志。</p>
+        
+        <div class="stats-container reveal">
+            <div class="stat-item">
+                <span class="stat-number" data-target="1000">0</span>
+                <span class="stat-label">Days Grind</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="8">0</span>
+                <span class="stat-label">Body Fat %</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="100">0</span>
+                <span class="stat-label">Focus Level</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact / Leadership Section -->
+    <section id="leadership">
+        <h2 class="reveal">Join The Legion</h2>
+        <p class="reveal" style="margin-bottom: 40px;">追求卓越是一条孤独的路，但你无需独自前行。</p>
+        <button class="btn-gold interactable">Contact Me</button>
+        <div class="signature reveal">Alexander</div>
+        
+        <footer style="margin-top: 100px; color: #444; font-size: 0.8rem;">
+            &copy; 2023 Personal Brand. All Rights Reserved.
+        </footer>
+    </section>
+
+    <script>
+        // 1. 自定义光标跟随
+        const cursor = document.querySelector('.cursor');
+        const cursorDot = document.querySelector('.cursor-dot');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+
+        // 2. 音效逻辑
+        const hoverSound = document.getElementById('hoverSound');
+        const clickSound = document.getElementById('clickSound');
+        // 降低音量防止刺耳
+        hoverSound.volume = 0.2;
+        clickSound.volume = 0.4;
+
+        const interactables = document.querySelectorAll('.interactable');
+
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'scale(1.5)';
+                cursor.style.background = 'rgba(212, 175, 55, 0.1)';
+                hoverSound.currentTime = 0;
+                hoverSound.play().catch(e => {}); // 忽略自动播放限制错误
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'scale(1)';
+                cursor.style.background = 'transparent';
+            });
+            el.addEventListener('click', () => {
+                clickSound.currentTime = 0;
+                clickSound.play();
+            });
+        });
+
+        function toggleMusic() {
+            const icon = document.getElementById('musicIcon');
+            if (icon.classList.contains('fa-volume-mute')) {
+                icon.classList.remove('fa-volume-mute');
+                icon.classList.add('fa-volume-up');
+                // 此处可以添加背景音乐播放逻辑
+                // bgMusic.play();
+            } else {
+                icon.classList.remove('fa-volume-up');
+                icon.classList.add('fa-volume-mute');
+                // bgMusic.pause();
+            }
+        }
+
+        // 3. 滚动动画 (Intersection Observer)
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // 如果是数字统计，触发增长动画
+                    if (entry.target.querySelector('.stat-number')) {
+                        const numbers = entry.target.querySelectorAll('.stat-number');
+                        numbers.forEach(num => {
+                            const target = +num.getAttribute('data-target');
+                            const duration = 2000; // ms
+                            const increment = target / (duration / 16);
+                            
+                            let current = 0;
+                            const updateNum = () => {
+                                current += increment;
+                                if (current < target) {
+                                    num.innerText = Math.ceil(current);
+                                    requestAnimationFrame(updateNum);
+                                } else {
+                                    num.innerText = target + (target === 8 ? '%' : ''); // 特殊处理体脂率
+                                }
+                            };
+                            updateNum();
+                        });
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // 平滑滚动
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

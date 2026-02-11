@@ -1,478 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高吉祥 - 机械设计助理工程师简历</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js 简单3D行走游戏</title>
     <style>
-        :root {
-            /* 屏幕显示配色：暗黑工业风 */
-            --bg-body: #0a0a0a;
-            --bg-card: #141414;
-            --bg-card-hover: #1c1c1c;
-            --text-primary: #e0e0e0;
-            --text-secondary: #949494;
-            --accent-color: #007aff; /* 科技蓝 */
-            --accent-glow: rgba(0, 122, 255, 0.4);
-            --border-color: #333;
-            --grid-color: rgba(255, 255, 255, 0.03);
-        }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #000;
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            transition: all 0.3s ease;
-        }
+      #game-container {
+        width: 100%;
+        height: 100%;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            line-height: 1.6;
-            /* 工程网格背景 */
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
+      #hint {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.55);
+        text-align: center;
+        padding: 20px;
+        user-select: none;
+        cursor: pointer;
+      }
 
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 30px;
-            animation: fadeIn 0.8s ease-out;
-        }
+      #hint.hidden {
+        display: none;
+      }
 
-        /* 头部区域 (跨两列) */
-        header {
-            grid-column: 1 / -1;
-            background: var(--bg-card);
-            padding: 40px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            position: relative;
-            overflow: hidden;
-        }
+      .panel {
+        background: rgba(20, 20, 20, 0.9);
+        border: 1px solid #666;
+        border-radius: 10px;
+        padding: 18px 22px;
+        line-height: 1.7;
+      }
 
-        /* 头部左侧光条装饰 */
-        header::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 6px;
-            background: linear-gradient(180deg, var(--accent-color), transparent);
-        }
-
-        .header-main h1 {
-            font-size: 42px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #fff, #888);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .job-target {
-            font-size: 18px;
-            color: var(--text-secondary);
-            letter-spacing: 1px;
-        }
-
-        .job-target span {
-            color: var(--accent-color);
-            font-weight: 700;
-            text-shadow: 0 0 10px var(--accent-glow);
-        }
-
-        .header-info {
-            text-align: right;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .header-info .phone {
-            color: var(--text-primary);
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        /* 侧边栏卡片 */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px;
-            position: relative;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            background: var(--bg-card-hover);
-            border-color: var(--accent-color);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-        }
-
-        h2 {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        h2::before {
-            content: '■';
-            font-size: 10px;
-            color: var(--accent-color);
-            margin-right: 8px;
-        }
-
-        /* 技能条样式 */
-        .skill-item {
-            margin-bottom: 15px;
-        }
-        .skill-name {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .progress-bg {
-            height: 6px;
-            background: #2a2a2a;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-color), #00c6ff);
-            border-radius: 3px;
-            position: relative;
-        }
-        /* 技能条辉光 */
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 10px;
-            background: #fff;
-            filter: blur(4px);
-            opacity: 0.6;
-        }
-
-        .info-list p {
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #bbb;
-        }
-
-        /* 主内容区域 */
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 15px;
-        }
-
-        .project-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .project-date {
-            font-size: 13px;
-            color: var(--accent-color);
-            font-family: monospace;
-        }
-
-        .project-content {
-            font-size: 14px;
-            color: #ccc;
-            text-align: justify;
-        }
-
-        .project-content ul {
-            padding-left: 20px;
-            margin-top: 10px;
-        }
-
-        .project-content li {
-            margin-bottom: 6px;
-        }
-
-        /* 标签样式 */
-        .tag {
-            display: inline-block;
-            padding: 2px 8px;
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--accent-color);
-            border-radius: 4px;
-            font-size: 12px;
-            margin-right: 5px;
-            border: 1px solid rgba(0, 122, 255, 0.2);
-        }
-
-        /* 动画 */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .header-info {
-                text-align: left;
-                margin-top: 20px;
-            }
-        }
-
-        /* --- 打印样式 (Ctrl+P 时自动变白底黑字) --- */
-        @media print {
-            body {
-                background: white;
-                color: black;
-                padding: 0;
-                display: block;
-            }
-            .container {
-                max-width: 100%;
-                grid-template-columns: 28% 68%;
-                gap: 20px;
-                display: grid; /* 强制保持两列 */
-            }
-            .card, header {
-                background: none;
-                border: none;
-                padding: 0;
-                box-shadow: none;
-                margin-bottom: 30px;
-            }
-            header::before { display: none; }
-            .header-main h1 { 
-                background: none; 
-                -webkit-text-fill-color: black; 
-                color: black;
-            }
-            .header-info .phone, .job-target span, .project-date, h2::before, .tag {
-                color: #000;
-                font-weight: bold;
-                text-shadow: none;
-            }
-            .project-content, .info-list p, .header-info {
-                color: #333;
-            }
-            h2 {
-                border-bottom: 2px solid #000;
-                color: #000;
-            }
-            .progress-bg {
-                background: #eee;
-                border: 1px solid #ccc;
-            }
-            .progress-fill {
-                background: #333;
-            }
-            .progress-fill::after { display: none; }
-            .tag {
-                border: 1px solid #333;
-                background: none;
-            }
-            /* 隐藏网页背景 */
-            header, .sidebar, .main-content {
-                page-break-inside: avoid;
-            }
-        }
+      #crosshair {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 12px;
+        height: 12px;
+        margin-left: -6px;
+        margin-top: -6px;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        box-sizing: border-box;
+        pointer-events: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div id="game-container"></div>
 
-    <div class="container">
-        
-        <!-- 顶部信息栏 -->
-        <header>
-            <div class="header-main">
-                <h1>高吉祥</h1>
-                <div class="job-target">求职意向：<span>比亚迪 · 机械设计助理工程师</span></div>
-            </div>
-            <div class="header-info">
-                <span class="phone">136-6372-9823</span>
-                <p>中原工学院 | 大三 (20岁)</p>
-                <p>机械设计制造及其自动化</p>
-            </div>
-        </header>
-
-        <!-- 左侧边栏 -->
-        <aside class="sidebar">
-            <div class="card">
-                <h2>教育背景</h2>
-                <div class="info-list">
-                    <h3 style="color: #fff; margin-bottom:5px;">中原工学院</h3>
-                    <p>本科 | 2023.09 - 2027.06 (预计)</p>
-                    <p style="color: var(--accent-color)">GPA: 专业排名前 20%</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>核心技能栈</h2>
-                
-                <div class="skill-item">
-                    <div class="skill-name"><span>NX / UG 建模</span><span>95%</span></div>
-                    <div class="progress-bg"><div class="progress-fill" style="width: 95%"></div></div>
-                </div>
-
-                <div class="skill-item">
-                    <div class="skill-name"><span>CAM 刀路编程</span><span>90%</span></div>
-                    <div class="progress-bg"><div class="progress-fill" style="width: 90%"></div></div>
-                </div>
-
-                <div class="skill-item">
-                    <div class="skill-name"><span>五轴加工技术</span><span>85%</span></div>
-                    <div class="progress-bg"><div class="progress-fill" style="width: 85%"></div></div>
-                </div>
-
-                <div class="skill-item">
-                    <div class="skill-name"><span>Ansys 仿真分析</span><span>80%</span></div>
-                    <div class="progress-bg"><div class="progress-fill" style="width: 80%"></div></div>
-                </div>
-                
-                <div style="margin-top: 15px;">
-                    <span class="tag">AutoCAD</span>
-                    <span class="tag">GD&T</span>
-                    <span class="tag">公差分析</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>语言能力</h2>
-                <div class="info-list">
-                    <p>• 英语 CET-4</p>
-                    <p>• 能够流畅阅读西门子NX英文文档</p>
-                    <p>• 熟悉机械工程专业术语</p>
-                </div>
-            </div>
-        </aside>
-
-        <!-- 右侧主内容 -->
-        <section class="main-content">
-            
-            <!-- 奖项卡片 -->
-            <div class="card">
-                <h2>荣誉奖项</h2>
-                <div class="section-header">
-                    <span class="project-title">全国3D大赛（3DDS）</span>
-                    <span class="project-date">国赛二等奖</span>
-                </div>
-                <div class="project-content">
-                    <p>作为核心技术骨干，负责参赛作品的机械结构设计与数字化验证。</p>
-                    <ul>
-                        <li>主导了产品的<strong>全参数化 3D 建模</strong>，利用 NX 运动仿真模块检测并解决了 3 处机构干涉问题。</li>
-                        <li>负责最终的渲染出图与答辩 PPT 中的技术原理解析，展现了极强的工程表达能力。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- 核心项目 1 -->
-            <div class="card">
-                <h2>项目与实践经验</h2>
-                
-                <div style="margin-bottom: 30px;">
-                    <div class="section-header">
-                        <span class="project-title">精密叶轮五轴加工与工艺编制</span>
-                        <span class="project-date">校内工程实训 | 核心负责人</span>
-                    </div>
-                    <div class="project-content">
-                        <span class="tag">五轴联动</span><span class="tag">CAM编程</span><span class="tag">工艺优化</span>
-                        <ul>
-                            <li>针对复杂曲面叶轮，使用 <strong>NX CAM</strong> 多轴铣削模块规划刀路，优化切入切出策略，将加工效率提升 20%。</li>
-                            <li>独立编写并调试<strong>五轴后处理程序</strong>，通过 Vericut 仿真验证，成功避免了机床碰撞风险。</li>
-                            <li>制定全套工艺卡片，严格控制关键尺寸公差在 <strong>IT7 级</strong>以内，掌握了实际机床的操作逻辑。</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- 核心项目 2 -->
-                <div style="margin-bottom: 30px;">
-                    <div class="section-header">
-                        <span class="project-title">齿轮箱结构静力学仿真分析</span>
-                        <span class="project-date">课程设计 | 独立完成</span>
-                    </div>
-                    <div class="project-content">
-                        <span class="tag">CAE仿真</span><span class="tag">Ansys Workbench</span><span class="tag">结构优化</span>
-                        <ul>
-                            <li>建立减速器箱体的有限元模型，施加边界条件与载荷，分析其在极限工况下的应力分布。</li>
-                            <li>发现轴承座连接处存在应力集中，通过<strong>拓扑优化</strong>增加加强筋与过渡圆角，使最大冯·米塞斯应力降低 15%。</li>
-                            <li>输出完整的仿真分析报告，验证了设计的强度与刚度满足使用要求。</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- 核心项目 3 -->
-                <div>
-                    <div class="section-header">
-                        <span class="project-title">自动化抓取机构设计</span>
-                        <span class="project-date">专业综合作业</span>
-                    </div>
-                    <div class="project-content">
-                        <span class="tag">非标设计</span><span class="tag">选型计算</span>
-                        <ul>
-                            <li>完成机械手爪的方案设计，包括丝杆电机选型、导轨寿命计算及 BOM 表编制。</li>
-                            <li>深入应用<strong>GD&T</strong>知识，对配合件进行合理的公差标注，确保装配精度。</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>自我评价</h2>
-                <div class="project-content">
-                    <p>我是一名热衷于数字化制造的机械专业学生。不同于传统的画图员，我不仅精通 <strong>NX 建模</strong>，更具备<strong>CAM 制造与 CAE 仿真</strong>的闭环思维。在校期间的五轴加工经历，让我深刻理解了“设计”与“制造”的鸿沟，并学会了如何设计出“造得出来、装得上去”的产品。渴望加入比亚迪，以严谨的工程素养投身新能源制造浪潮。</p>
-                </div>
-            </div>
-
-        </section>
+    <div id="hint">
+      <div class="panel">
+        <div id="hint-text">点击开始（锁定鼠标）</div>
+        鼠标：看向四周<br />
+        WASD：移动 | 空格：跳跃 | ESC：释放鼠标
+      </div>
     </div>
 
-</body>
+    <div id="crosshair" aria-hidden="true"></div>
+
+    <script type="module" src="./game.js"></script>
+  </body>
 </html>

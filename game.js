@@ -57,6 +57,9 @@ const player = {
   leftArm: null,
   rightArm: null,
   weapon: null,
+  muzzleSocket: null,
+  muzzleFlash: null,
+  muzzleFlashTime: 0,
 };
 
 const targets = [];
@@ -321,6 +324,18 @@ function createPlayerModel() {
   barrel.castShadow = true;
   weapon.add(barrel);
 
+  const muzzleSocket = new THREE.Object3D();
+  muzzleSocket.position.set(0, 0, 1.68);
+  weapon.add(muzzleSocket);
+
+  const muzzleFlash = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 10, 10),
+    new THREE.MeshBasicMaterial({ color: 0xffd06a, transparent: true, opacity: 0.95 })
+  );
+  muzzleFlash.position.copy(muzzleSocket.position);
+  muzzleFlash.visible = false;
+  weapon.add(muzzleFlash);
+
   const stock = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.52), gunMat);
   stock.position.set(0, 0, -0.87);
   stock.castShadow = true;
@@ -338,6 +353,8 @@ function createPlayerModel() {
   player.leftArm = leftArm;
   player.rightArm = rightArm;
   player.weapon = weapon;
+  player.muzzleSocket = muzzleSocket;
+  player.muzzleFlash = muzzleFlash;
 
   player.body.position.set(0, 0, 24);
   scene.add(player.body);
@@ -463,7 +480,21 @@ function spawnBulletMesh(from, to) {
 }
 
 function getMuzzleWorldPosition() {
-  return player.body.localToWorld(new THREE.Vector3(0.55, 1.37, 1.95));
+  if (!player.muzzleSocket) {
+    return player.body.localToWorld(new THREE.Vector3(0.55, 1.37, 1.95));
+  }
+  const pos = new THREE.Vector3();
+  player.muzzleSocket.getWorldPosition(pos);
+  return pos;
+}
+
+function getMuzzleWorldDirection() {
+  if (!player.muzzleSocket) {
+    return new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
+  }
+  const dir = new THREE.Vector3(0, 0, 1);
+  dir.applyQuaternion(player.muzzleSocket.getWorldQuaternion(new THREE.Quaternion()));
+  return dir.normalize();
 }
 
 function getForwardOnGround() {
@@ -488,6 +519,15 @@ function updatePlayerPose(t, moving, sprinting) {
 
   if (player.weapon) {
     player.weapon.rotation.x = -0.15 + Math.sin(t * 7) * 0.015;
+  }
+
+  if (player.muzzleFlash) {
+    if (player.muzzleFlashTime > 0) {
+      player.muzzleFlash.visible = true;
+      player.muzzleFlash.scale.setScalar(0.8 + Math.random() * 0.7);
+    } else {
+      player.muzzleFlash.visible = false;
+    }
   }
 
   const leftLeg = player.body.children.find((x) => x.geometry?.type === 'CapsuleGeometry' && x.position.x < 0);
@@ -553,6 +593,10 @@ function updateTargets(t) {
 }
 
 function updateEffects(delta) {
+  if (player.muzzleFlashTime > 0) {
+    player.muzzleFlashTime = Math.max(0, player.muzzleFlashTime - delta);
+  }
+
   for (let i = hitEffects.length - 1; i >= 0; i--) {
     const fx = hitEffects[i];
     let alive = 0;
@@ -632,11 +676,15 @@ function shoot() {
     spawnHitEffect(finalPoint, 0xdfe8ff);
   }
 
+  const muzzleDir = getMuzzleWorldDirection();
   const projectileTarget = finalPoint.clone();
-  if (muzzlePos.distanceTo(projectileTarget) < 1) {
-    projectileTarget.add(shootDirection.clone().multiplyScalar(8));
+
+  const toTarget = projectileTarget.clone().sub(muzzlePos);
+  if (toTarget.lengthSq() < 1 || toTarget.normalize().dot(muzzleDir) < 0.25) {
+    projectileTarget.copy(muzzlePos).add(muzzleDir.multiplyScalar(64));
   }
 
+  player.muzzleFlashTime = 0.045;
   spawnBulletTrail(muzzlePos, projectileTarget);
   spawnBulletMesh(muzzlePos, projectileTarget);
 }

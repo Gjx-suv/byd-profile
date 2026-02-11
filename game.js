@@ -59,7 +59,7 @@ const gameState = {
 const targets = [];
 const hitEffects = [];
 const bulletTrails = [];
-const bulletMeshes = [];
+const bulletProjectiles = [];
 
 function updateHud() {
   scoreEl.textContent = String(gameState.score);
@@ -297,20 +297,29 @@ function spawnBulletTrail(from, to) {
 }
 
 function spawnBulletMesh(from, to) {
+  const distance = from.distanceTo(to);
+  if (distance < 0.05) return;
+
   const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.05, 10, 10),
+    new THREE.SphereGeometry(0.08, 12, 12),
     new THREE.MeshBasicMaterial({ color: 0xfff2aa })
   );
   mesh.position.copy(from);
   scene.add(mesh);
 
-  const velocity = new THREE.Vector3().subVectors(to, from).normalize().multiplyScalar(78);
-  bulletMeshes.push({ mesh, velocity, life: 0.28 });
+  const duration = Math.max(0.06, Math.min(0.35, distance / 120));
+  bulletProjectiles.push({
+    mesh,
+    from: from.clone(),
+    to: to.clone(),
+    t: 0,
+    duration,
+  });
 }
 
 function getMuzzleWorldPosition() {
   return player.body
-    .localToWorld(new THREE.Vector3(0.45, 1.2, 0.95));
+    .localToWorld(new THREE.Vector3(0.55, 1.25, 1.15));
 }
 
 function getForwardOnGround() {
@@ -326,14 +335,14 @@ function getForwardOnGround() {
 }
 
 function updateCameraThirdPerson(delta) {
-  const idealOffset = new THREE.Vector3(0, 2.25, 5.4);
-  const yaw = controls.getObject().rotation.y;
+  const pivot = player.body.position.clone().add(new THREE.Vector3(0, 1.45, 0));
+  const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion);
+  const desired = pivot
+    .clone()
+    .addScaledVector(backward, 5.4)
+    .add(new THREE.Vector3(0, 0.9, 0));
 
-  const offset = idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  const desired = player.body.position.clone().add(offset);
-
-  camera.position.lerp(desired, Math.min(1, 10 * delta));
-  camera.lookAt(player.body.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
+  camera.position.lerp(desired, Math.min(1, 12 * delta));
 }
 
 function updatePlayerMovement(delta) {
@@ -421,14 +430,17 @@ function updateEffects(delta) {
     }
   }
 
-  for (let i = bulletMeshes.length - 1; i >= 0; i--) {
-    const bullet = bulletMeshes[i];
-    bullet.life -= delta;
-    bullet.mesh.position.addScaledVector(bullet.velocity, delta);
-    if (bullet.life <= 0) {
+  for (let i = bulletProjectiles.length - 1; i >= 0; i--) {
+    const bullet = bulletProjectiles[i];
+    bullet.t += delta / bullet.duration;
+
+    if (bullet.t >= 1) {
       scene.remove(bullet.mesh);
-      bulletMeshes.splice(i, 1);
+      bulletProjectiles.splice(i, 1);
+      continue;
     }
+
+    bullet.mesh.position.lerpVectors(bullet.from, bullet.to, bullet.t);
   }
 }
 
@@ -469,8 +481,13 @@ function shoot() {
     spawnHitEffect(finalPoint, 0xdde8ff);
   }
 
-  spawnBulletTrail(muzzlePos, finalPoint);
-  spawnBulletMesh(muzzlePos, finalPoint);
+  const projectileTarget = finalPoint.clone();
+  if (muzzlePos.distanceTo(projectileTarget) < 0.5) {
+    projectileTarget.add(shootDirection.clone().multiplyScalar(8));
+  }
+
+  spawnBulletTrail(muzzlePos, projectileTarget);
+  spawnBulletMesh(muzzlePos, projectileTarget);
 }
 
 overlay.addEventListener('click', () => controls.lock());
@@ -544,4 +561,3 @@ function animate() {
 }
 
 animate();
-

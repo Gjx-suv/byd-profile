@@ -1,5 +1,5 @@
-import * as THREE from 'https://esm.sh/three@0.166.1';
-import { PointerLockControls } from 'https://esm.sh/three@0.166.1/examples/jsm/controls/PointerLockControls.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js';
+import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/PointerLockControls.js';
 
 const container = document.getElementById('game-container');
 const hint = document.getElementById('hint');
@@ -20,19 +20,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
 const controls = new PointerLockControls(camera, document.body);
-scene.add(camera);
+scene.add(controls.getObject());
 
-function startGame() {
-  controls.lock();
-}
-
-hint.addEventListener('click', startGame);
-renderer.domElement.addEventListener('click', () => {
-  if (!controls.isLocked) {
-    controls.lock();
-  }
-});
-
+hint.addEventListener('click', () => controls.lock());
 controls.addEventListener('lock', () => hint.classList.add('hidden'));
 controls.addEventListener('unlock', () => hint.classList.remove('hidden'));
 
@@ -46,6 +36,7 @@ scene.add(dirLight);
 const MAP_SIZE = 100;
 const HALF_MAP = MAP_SIZE / 2;
 
+// 地面
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE),
   new THREE.MeshStandardMaterial({ color: 0x4e8a3c })
@@ -53,10 +44,12 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
+// 网格辅助线
 const grid = new THREE.GridHelper(MAP_SIZE, 20, 0x444444, 0x666666);
 grid.position.y = 0.01;
 scene.add(grid);
 
+// 简单边界墙
 const wallHeight = 6;
 const wallThickness = 1;
 const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x6d6d6d });
@@ -75,6 +68,7 @@ createWall(MAP_SIZE + wallThickness, wallThickness, 0, HALF_MAP);
 createWall(wallThickness, MAP_SIZE + wallThickness, -HALF_MAP, 0);
 createWall(wallThickness, MAP_SIZE + wallThickness, HALF_MAP, 0);
 
+// 几个简单方块障碍物
 const boxGeo = new THREE.BoxGeometry(3, 3, 3);
 const boxMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
 for (let i = 0; i < 12; i++) {
@@ -93,7 +87,7 @@ const player = {
   onGround: true,
 };
 
-camera.position.set(0, player.eyeHeight, 10);
+controls.getObject().position.set(0, player.eyeHeight, 10);
 
 const keyState = {
   KeyW: false,
@@ -128,10 +122,12 @@ function animate() {
   const delta = Math.min(clock.getDelta(), 0.1);
 
   if (controls.isLocked) {
+    // 计算前后左右方向
     player.direction.z = Number(keyState.KeyW) - Number(keyState.KeyS);
     player.direction.x = Number(keyState.KeyD) - Number(keyState.KeyA);
     player.direction.normalize();
 
+    // 水平移动
     const moveDistance = player.speed * delta;
     if (player.direction.z !== 0) {
       controls.moveForward(player.direction.z * moveDistance);
@@ -140,22 +136,24 @@ function animate() {
       controls.moveRight(player.direction.x * moveDistance);
     }
 
+    // 重力与跳跃
     player.velocity.y -= player.gravity * delta;
-    camera.position.y += player.velocity.y * delta;
+    controls.getObject().position.y += player.velocity.y * delta;
 
-    if (camera.position.y <= player.eyeHeight) {
-      camera.position.y = player.eyeHeight;
+    if (controls.getObject().position.y <= player.eyeHeight) {
+      controls.getObject().position.y = player.eyeHeight;
       player.velocity.y = 0;
       player.onGround = true;
     }
 
-    camera.position.x = THREE.MathUtils.clamp(
-      camera.position.x,
+    // 地图边界限制（防止走出去）
+    controls.getObject().position.x = THREE.MathUtils.clamp(
+      controls.getObject().position.x,
       -HALF_MAP + 1,
       HALF_MAP - 1
     );
-    camera.position.z = THREE.MathUtils.clamp(
-      camera.position.z,
+    controls.getObject().position.z = THREE.MathUtils.clamp(
+      controls.getObject().position.z,
       -HALF_MAP + 1,
       HALF_MAP - 1
     );

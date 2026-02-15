@@ -1,0 +1,96 @@
+:root {
+  --bg: #000;
+  --text: #e7ebff;
+  --muted: #96a2cf;
+  --accent: #7fa2ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow: hidden;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(95, 132, 255, 0.2) 0%, rgba(0, 0, 0, 0) 35%),
+    radial-gradient(circle at 30% 85%, rgba(121, 48, 255, 0.13) 0%, rgba(0, 0, 0, 0) 40%),
+    #000;
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hud {
+  position: absolute;
+  top: 8vh;
+  left: min(7vw, 72px);
+  width: min(46ch, 72vw);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: clamp(11px, 0.8vw, 13px);
+}
+
+h1 {
+  margin: 0.4rem 0 1rem;
+  font-size: clamp(2rem, 5.2vw, 4.8rem);
+  font-weight: 560;
+  letter-spacing: 0.03em;
+}
+
+.lead {
+  margin: 0;
+  color: #d2daff;
+  line-height: 1.6;
+  font-size: clamp(0.92rem, 1.3vw, 1.18rem);
+}
+
+.hint {
+  margin-top: 1.15rem;
+  color: #8093d6;
+  font-size: clamp(0.85rem, 1.15vw, 1rem);
+}
+
+.caption {
+  position: absolute;
+  right: min(6vw, 56px);
+  bottom: min(8vh, 64px);
+  margin: 0;
+  z-index: 2;
+  border-left: 2px solid rgba(130, 154, 255, 0.45);
+  padding-left: 1rem;
+  max-width: min(34ch, 58vw);
+  color: #acb9f2;
+  font-size: clamp(0.82rem, 1.1vw, 1rem);
+  line-height: 1.55;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.caption p {
+  margin: 0;
+}

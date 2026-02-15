@@ -1,7 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.166.1';
 
 const container = document.getElementById('scene');
-const poemOverlay = document.getElementById('poem-overlay');
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
@@ -242,20 +241,16 @@ scene.add(group);
 const materials = Array.from({ length: CLOUD_COUNT }, (_, i) => {
   const hue = 0.55 + Math.random() * 0.08;
   return new THREE.PointsMaterial({
-    size: 0.32,
+    size: 0.34,
     map: getGlyphTexture(randomCharFrom(dataChars)),
     transparent: true,
     alphaTest: 0.16,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    opacity: 0.82,
+    opacity: 0.84,
     color: new THREE.Color().setHSL(hue, 0.95, 0.72 + (i % 3) * 0.04),
   });
 });
-
-const accentMaterialIndices = new Set(
-  Array.from({ length: CLOUD_COUNT }, (_, i) => i).filter((i) => i % 6 === 0)
-);
 
 const poemTargets = buildPoemTargets(PARTICLE_COUNT);
 const clouds = [];
@@ -329,12 +324,11 @@ let hoverState = false;
 let glyphSwapCooldown = 0;
 
 function updateMaterialGlyphs(useSymbols) {
-  materials.forEach((mat, index) => {
-    const isAccent = accentMaterialIndices.has(index);
-    const pool = useSymbols && isAccent ? symbolChars : dataChars;
+  const pool = useSymbols ? symbolChars : dataChars;
+  for (const mat of materials) {
     mat.map = getGlyphTexture(randomCharFrom(pool));
     mat.needsUpdate = true;
-  });
+  }
 }
 
 function animate() {
@@ -351,19 +345,17 @@ function animate() {
 
   raycaster.setFromCamera(mouseNdc, camera);
   const isHover = raycaster.intersectObject(core, false).length > 0;
-  hoverMix += ((isHover ? 1 : 0) - hoverMix) * 0.075;
+  hoverMix += ((isHover ? 1 : 0) - hoverMix) * 0.055;
 
   if (isHover !== hoverState) {
     hoverState = isHover;
-    glyphSwapCooldown = 0;
-    poemOverlay?.classList.toggle('active', hoverState);
     updateMaterialGlyphs(hoverState);
   }
 
   if (hoverState) {
     glyphSwapCooldown -= dt;
     if (glyphSwapCooldown <= 0) {
-      glyphSwapCooldown = 0.32;
+      glyphSwapCooldown = 0.15;
       updateMaterialGlyphs(true);
     }
   }
@@ -401,9 +393,9 @@ function animate() {
       const sy = by * pulse + Math.cos(t * 2.4 + offset.array[i]) * 0.15;
       const sz = bz * pulse;
 
-      const tx = poemTargets[gIdx].x + Math.sin(t * 0.55 + gIdx * 0.05) * seed * 0.08;
-      const ty = poemTargets[gIdx].y + Math.cos(t * 0.48 + gIdx * 0.04) * seed * 0.06;
-      const tz = poemTargets[gIdx].z + Math.sin(t * 0.38 + gIdx * 0.02) * 0.08;
+      const tx = poemTargets[gIdx].x + Math.sin(t * 0.8 + gIdx * 0.06) * seed * 0.2;
+      const ty = poemTargets[gIdx].y + Math.cos(t * 0.66 + gIdx * 0.04) * seed * 0.14;
+      const tz = poemTargets[gIdx].z + Math.sin(t * 0.5 + gIdx * 0.02) * 0.2;
 
       pos.array[idx] = THREE.MathUtils.lerp(sx, tx, hoverMix);
       pos.array[idx + 1] = THREE.MathUtils.lerp(sy, ty, hoverMix);

@@ -3,114 +3,82 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>第三人称射击打靶游戏</title>
+    <title>The Pulse of Cycles</title>
     <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       html,
       body {
         margin: 0;
         width: 100%;
         height: 100%;
         overflow: hidden;
-        font-family: Arial, sans-serif;
-        background: #000;
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        background: #000000;
       }
 
-      #game-container {
+      #scene {
         width: 100%;
         height: 100%;
       }
 
-      #hud {
+      .hud {
         position: fixed;
-        top: 14px;
-        left: 14px;
-        color: #fff;
-        background: rgba(10, 10, 10, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        padding: 10px 12px;
-        line-height: 1.5;
-        z-index: 10;
-        user-select: none;
-      }
-
-      #start-overlay {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.6);
-        color: #fff;
-        z-index: 20;
-        text-align: center;
-        cursor: pointer;
-      }
-
-      #start-overlay.hidden {
-        display: none;
-      }
-
-      .panel {
-        background: rgba(20, 20, 20, 0.9);
-        border: 1px solid #666;
-        border-radius: 10px;
-        padding: 18px 22px;
-        line-height: 1.7;
-      }
-
-      #crosshair {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        width: 16px;
-        height: 16px;
-        margin-left: -8px;
-        margin-top: -8px;
+        top: 20px;
+        left: 20px;
+        z-index: 5;
+        color: rgba(255, 255, 255, 0.9);
         pointer-events: none;
-        z-index: 9;
       }
 
-      #crosshair::before,
-      #crosshair::after {
-        content: '';
-        position: absolute;
-        background: rgba(255, 255, 255, 0.9);
+      .hud h1 {
+        margin: 0;
+        font-size: clamp(22px, 2.7vw, 42px);
+        letter-spacing: 0.08em;
+        font-weight: 600;
       }
 
-      #crosshair::before {
-        left: 7px;
-        top: 0;
-        width: 2px;
-        height: 16px;
+      .hud p {
+        margin: 8px 0 0;
+        max-width: min(480px, 75vw);
+        line-height: 1.6;
+        font-size: clamp(13px, 1.25vw, 18px);
+        color: rgba(196, 214, 255, 0.75);
       }
 
-      #crosshair::after {
-        top: 7px;
-        left: 0;
-        width: 16px;
-        height: 2px;
+      .hint {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 5;
+        padding: 10px 14px;
+        border: 1px solid rgba(140, 182, 255, 0.35);
+        border-radius: 12px;
+        background: rgba(7, 10, 18, 0.56);
+        color: rgba(224, 234, 255, 0.92);
+        font-size: 13px;
+        backdrop-filter: blur(4px);
       }
     </style>
   </head>
   <body>
-    <div id="game-container"></div>
+    <div id="scene"></div>
 
-    <div id="hud">
-      <div>分数: <span id="score">0</span></div>
-      <div>命中: <span id="hits">0</span></div>
-      <div>子弹: <span id="ammo">∞</span></div>
+    <div class="hud">
+      <h1>The Pulse of Cycles</h1>
+      <p>
+        把宏观经济的枯燥数据，用前端视角重新解构。代码是理性的，但周期是感性的。
+        熬了两个大夜，终于让数据“呼吸”了起来。
+      </p>
     </div>
 
-    <div id="start-overlay">
-      <div class="panel">
-        点击开始（锁定鼠标）<br />
-        鼠标：旋转视角 | WASD：移动<br />
-        按住 Shift：冲刺 | 鼠标左键：开枪
-      </div>
-    </div>
-
-    <div id="crosshair" aria-hidden="true"></div>
+    <div class="hint">移动鼠标环视，悬停到球体上让它散成一首关于时间的诗。</div>
 
     <script type="module" src="./game.js"></script>
   </body>

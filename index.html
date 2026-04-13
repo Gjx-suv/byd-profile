@@ -2,26 +2,382 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Pulse of Cycles</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>高级个人海报生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        font-family: "Inter", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+        overflow-x: hidden;
+      }
+
+      .font-playfair {
+        font-family: "Playfair Display", serif;
+      }
+
+      .font-bebas {
+        font-family: "Bebas Neue", sans-serif;
+      }
+
+      .template-btn-active {
+        border-color: rgb(244 244 245 / 0.95);
+        background: rgb(82 82 91 / 0.95);
+        color: rgb(250 250 250 / 1);
+      }
+
+      .panel-input {
+        width: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid rgb(82 82 91 / 0.9);
+        background: rgb(39 39 42 / 0.8);
+        color: rgb(244 244 245);
+        padding: 0.625rem 0.8rem;
+        font-size: 0.82rem;
+        line-height: 1.3;
+      }
+
+      .panel-input:focus {
+        outline: none;
+        border-color: rgb(228 228 231 / 0.95);
+        box-shadow: 0 0 0 2px rgb(228 228 231 / 0.3);
+      }
+    </style>
   </head>
-  <body>
-    <main class="stage">
-      <canvas id="scene"></canvas>
-      <section class="hud">
-        <p class="eyebrow">Three.js / </p>
-        <h1>The Pulse of Cycles</h1>
-        <p class="lead">
-          代码是理性的。<br />
-      
-        </p>
-        <p class="hint">把鼠标移到球体上，触发「时间之诗」。</p>
+  <body class="min-h-screen bg-zinc-900 text-white antialiased">
+    <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 px-4 py-5 sm:gap-6 sm:p-6 lg:flex-row lg:items-start lg:gap-8 lg:p-10">
+      <section class="w-full rounded-2xl border border-zinc-700/60 bg-zinc-800/60 p-4 shadow-2xl backdrop-blur sm:p-6 lg:sticky lg:top-8 lg:w-2/5">
+        <div class="flex h-full flex-col">
+          <div>
+            <p class="text-xs uppercase tracking-[0.24em] text-zinc-400">Poster Lab</p>
+            <h1 class="mt-3 text-xl font-semibold sm:text-2xl md:text-3xl">高级个人海报生成器</h1>
+            <p class="mt-3 text-sm leading-relaxed text-zinc-300">
+              上传图片后可在两种高级排版模板中切换，并实时编辑标题、坐标和电影台词。
+            </p>
+          </div>
+
+          <div class="mt-5 space-y-4 sm:mt-6">
+            <label
+              for="imageUpload"
+              class="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-zinc-500/70 bg-zinc-700 px-5 py-3 text-sm font-medium text-zinc-100 shadow-lg transition hover:border-zinc-300 hover:bg-zinc-600 focus-within:ring-2 focus-within:ring-white/70"
+            >
+              上传图片
+              <input id="imageUpload" type="file" accept="image/*" class="sr-only" />
+            </label>
+            <p class="text-xs text-zinc-400">支持 JPG / PNG / WebP 等常见格式。</p>
+
+            <div class="space-y-2 pt-1">
+              <label for="titleInput" class="text-xs uppercase tracking-[0.16em] text-zinc-400">大标题</label>
+              <input id="titleInput" class="panel-input font-playfair uppercase tracking-[0.06em]" value="THE CAMPUS" />
+            </div>
+
+            <div class="space-y-2">
+              <label for="coordsInput" class="text-xs uppercase tracking-[0.16em] text-zinc-400">坐标</label>
+              <input id="coordsInput" class="panel-input" value="LAT 39.99° N, LON 116.32° E" />
+            </div>
+
+            <div class="space-y-2">
+              <label for="quoteInput" class="text-xs uppercase tracking-[0.16em] text-zinc-400">电影台词（电影模板）</label>
+              <input
+                id="quoteInput"
+                class="panel-input"
+                value="我们最接近的时候，我跟她之间的距离只有0.01公分。 / At our closest point, we were just 0.01 cm apart."
+              />
+            </div>
+
+            <div class="pt-1">
+              <p class="mb-2 text-xs uppercase tracking-[0.2em] text-zinc-500">模板切换</p>
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  id="btnKinfolk"
+                  type="button"
+                  data-template="kinfolk"
+                  class="template-btn template-btn-active rounded-lg border border-zinc-600/80 bg-zinc-700/80 px-4 py-2 text-xs font-medium text-zinc-100 transition hover:border-zinc-300"
+                >
+                  模板1 · Kinfolk
+                </button>
+                <button
+                  id="btnCinematic"
+                  type="button"
+                  data-template="cinematic"
+                  class="template-btn rounded-lg border border-zinc-600/80 bg-zinc-800/90 px-4 py-2 text-xs font-medium text-zinc-300 transition hover:border-zinc-300 hover:text-zinc-100"
+                >
+                  模板2 · Cinematic
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-3 sm:mt-8">
+            <button
+              id="pixelStyleBtn"
+              type="button"
+              class="w-full rounded-xl border border-pink-300/70 bg-pink-500/90 px-4 py-3 text-sm font-semibold text-white shadow-xl transition hover:bg-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-200/70 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              一键转像素可爱风
+            </button>
+            <button
+              id="downloadPosterBtn"
+              type="button"
+              class="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-zinc-900 shadow-xl transition hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/80 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              一键生成高级海报
+            </button>
+            <p class="text-xs text-zinc-500">前端实现：HTML5 + TailwindCSS + 原生 JavaScript + html2canvas</p>
+          </div>
+        </div>
       </section>
-      <aside class="caption">
-        <p>“”</p>
-      </aside>
-    </main>
-    <script type="module" src="app.js"></script>
+
+      <section class="w-full rounded-2xl border border-zinc-700/60 bg-zinc-800/40 p-3 shadow-2xl sm:p-4 lg:w-3/5">
+        <div id="previewBox" class="relative flex min-h-[300px] w-full items-center justify-center overflow-hidden rounded-xl bg-zinc-950/80 p-2 sm:min-h-[380px] sm:p-3 lg:min-h-[560px]">
+          <div id="placeholder" class="absolute inset-0 z-30 flex flex-col items-center justify-center px-6 text-center text-zinc-400">
+            <p class="text-base font-medium">预览区</p>
+            <p class="mt-2 text-sm">上传图片后将在这里展示海报模板</p>
+          </div>
+
+          <div id="exportTarget" class="relative flex w-full max-w-full items-center justify-center">
+            <div id="templateKinfolk" class="template-panel relative hidden w-full max-w-[540px] overflow-hidden sm:max-w-[680px] lg:max-w-[880px]">
+              <div class="aspect-[3/4] w-full bg-white p-[20px]">
+                <div class="relative h-full w-full overflow-hidden bg-zinc-900">
+                  <img id="previewImageKinfolk" alt="Kinfolk 海报预览" class="h-full w-full object-cover" />
+                  <div class="pointer-events-none absolute inset-x-5 top-4 text-white/45">
+                    <p id="kinfolkTitle" class="font-playfair text-[clamp(2.1rem,10vw,7.2rem)] uppercase leading-[0.86] tracking-[0.06em]">THE CAMPUS</p>
+                  </div>
+                  <div id="kinfolkCoords" class="pointer-events-none absolute right-4 top-4 text-[10px] uppercase tracking-[0.24em] text-white/85">
+                    LAT 39.99° N, LON 116.32° E
+                  </div>
+                  <div class="pointer-events-none absolute bottom-4 left-4 text-[10px] uppercase tracking-[0.25em] text-white/80">
+                    VOL.01 / AESTHETIC LAB
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="templateCinematic" class="template-panel relative hidden w-full max-w-full overflow-hidden rounded-md bg-black sm:max-w-[920px]">
+              <div class="aspect-video w-full">
+                <div class="flex h-full w-full flex-col bg-black">
+                  <div class="h-[14%] w-full bg-black"></div>
+                  <div class="relative h-[72%] w-full overflow-hidden">
+                    <img
+                      id="previewImageCinematic"
+                      alt="Cinematic 海报预览"
+                      class="h-full w-full object-cover"
+                      style="filter: contrast(110%) sepia(20%) grayscale(10%);"
+                    />
+                  </div>
+                  <div class="flex h-[14%] w-full items-center justify-center bg-black px-4 text-center sm:px-6">
+                    <p id="cinematicQuote" class="font-bebas text-[clamp(0.5rem,1.9vw,0.95rem)] tracking-[0.06em] text-zinc-200/95">
+                      我们最接近的时候，我跟她之间的距离只有0.01公分。 / At our closest point, we were just 0.01 cm apart.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const imageUpload = document.getElementById("imageUpload");
+      const placeholder = document.getElementById("placeholder");
+      const pixelStyleBtn = document.getElementById("pixelStyleBtn");
+      const downloadPosterBtn = document.getElementById("downloadPosterBtn");
+
+      const titleInput = document.getElementById("titleInput");
+      const coordsInput = document.getElementById("coordsInput");
+      const quoteInput = document.getElementById("quoteInput");
+
+      const kinfolkTitle = document.getElementById("kinfolkTitle");
+      const kinfolkCoords = document.getElementById("kinfolkCoords");
+      const cinematicQuote = document.getElementById("cinematicQuote");
+
+      const templatePanels = {
+        kinfolk: document.getElementById("templateKinfolk"),
+        cinematic: document.getElementById("templateCinematic"),
+      };
+
+      const previewImages = [
+        document.getElementById("previewImageKinfolk"),
+        document.getElementById("previewImageCinematic"),
+      ];
+
+      const templateButtons = document.querySelectorAll(".template-btn");
+      let currentTemplate = "kinfolk";
+      let currentImageSrc = "";
+
+      const getActiveTemplateElement = () => templatePanels[currentTemplate];
+
+      const setTemplate = (templateName) => {
+        currentTemplate = templateName;
+
+        Object.entries(templatePanels).forEach(([name, panel]) => {
+          panel.classList.toggle("hidden", name !== templateName);
+        });
+
+        templateButtons.forEach((button) => {
+          const isActive = button.dataset.template === templateName;
+          button.classList.toggle("template-btn-active", isActive);
+          button.classList.toggle("text-zinc-100", isActive);
+          button.classList.toggle("text-zinc-300", !isActive);
+        });
+      };
+
+      const syncText = () => {
+        kinfolkTitle.textContent = titleInput.value || "THE CAMPUS";
+        kinfolkCoords.textContent = coordsInput.value || "LAT 39.99° N, LON 116.32° E";
+        cinematicQuote.textContent =
+          quoteInput.value ||
+          "我们最接近的时候，我跟她之间的距离只有0.01公分。 / At our closest point, we were just 0.01 cm apart.";
+      };
+
+      const applyPreviewImage = (src) => {
+        previewImages.forEach((image) => {
+          image.src = src;
+        });
+        placeholder.classList.add("hidden");
+      };
+
+      const createPixelCuteImage = (source) =>
+        new Promise((resolve, reject) => {
+          const image = new Image();
+          image.crossOrigin = "anonymous";
+
+          image.onload = () => {
+            const maxWidth = 1400;
+            const ratio = Math.min(1, maxWidth / image.width);
+            const width = Math.max(320, Math.round(image.width * ratio));
+            const height = Math.max(320, Math.round(image.height * ratio));
+
+            const pixelSize = Math.max(8, Math.round(Math.min(width, height) / 55));
+            const smallWidth = Math.max(32, Math.floor(width / pixelSize));
+            const smallHeight = Math.max(32, Math.floor(height / pixelSize));
+
+            const smallCanvas = document.createElement("canvas");
+            smallCanvas.width = smallWidth;
+            smallCanvas.height = smallHeight;
+            const smallCtx = smallCanvas.getContext("2d");
+            smallCtx.imageSmoothingEnabled = false;
+            smallCtx.drawImage(image, 0, 0, smallWidth, smallHeight);
+
+            const outputCanvas = document.createElement("canvas");
+            outputCanvas.width = width;
+            outputCanvas.height = height;
+            const outputCtx = outputCanvas.getContext("2d");
+            outputCtx.imageSmoothingEnabled = false;
+            outputCtx.drawImage(smallCanvas, 0, 0, smallWidth, smallHeight, 0, 0, width, height);
+
+            outputCtx.globalCompositeOperation = "soft-light";
+            outputCtx.fillStyle = "rgba(255, 182, 193, 0.22)";
+            outputCtx.fillRect(0, 0, width, height);
+
+            outputCtx.globalCompositeOperation = "overlay";
+            outputCtx.fillStyle = "rgba(255, 215, 236, 0.15)";
+            outputCtx.fillRect(0, 0, width, height);
+
+            resolve(outputCanvas.toDataURL("image/png"));
+          };
+
+          image.onerror = () => reject(new Error("像素化处理失败"));
+          image.src = source;
+        });
+
+      [titleInput, coordsInput, quoteInput].forEach((input) => {
+        input.addEventListener("input", syncText);
+      });
+
+      templateButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          setTemplate(button.dataset.template);
+        });
+      });
+
+      imageUpload.addEventListener("change", (event) => {
+        const [file] = event.target.files || [];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = (loadEvent) => {
+          currentImageSrc = loadEvent.target?.result;
+          applyPreviewImage(currentImageSrc);
+          setTemplate(currentTemplate);
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      pixelStyleBtn.addEventListener("click", async () => {
+        if (!currentImageSrc) {
+          alert("请先上传图片，再一键转像素可爱风。");
+          return;
+        }
+
+        pixelStyleBtn.disabled = true;
+        const originalText = pixelStyleBtn.textContent;
+        pixelStyleBtn.textContent = "像素风处理中...";
+
+        try {
+          const pixelImageSrc = await createPixelCuteImage(currentImageSrc);
+          currentImageSrc = pixelImageSrc;
+          applyPreviewImage(currentImageSrc);
+        } catch (error) {
+          console.error(error);
+          alert("像素风转换失败，请换一张图再试。");
+        } finally {
+          pixelStyleBtn.disabled = false;
+          pixelStyleBtn.textContent = originalText;
+        }
+      });
+
+      downloadPosterBtn.addEventListener("click", async () => {
+        if (placeholder.classList.contains("hidden") === false) {
+          alert("请先上传图片后再生成海报。");
+          return;
+        }
+
+        downloadPosterBtn.disabled = true;
+        const originalText = downloadPosterBtn.textContent;
+        downloadPosterBtn.textContent = "正在生成海报...";
+
+        try {
+          const targetElement = getActiveTemplateElement();
+          const canvas = await html2canvas(targetElement, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+            scrollX: 0,
+            scrollY: -window.scrollY,
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight,
+          });
+
+          const imageData = canvas.toDataURL("image/png");
+          const downloadLink = document.createElement("a");
+          downloadLink.href = imageData;
+          downloadLink.download = "My-Aesthetic-Poster.png";
+          downloadLink.click();
+        } catch (error) {
+          console.error("海报生成失败:", error);
+          alert("海报生成失败，请稍后再试。");
+        } finally {
+          downloadPosterBtn.disabled = false;
+          downloadPosterBtn.textContent = originalText;
+        }
+      });
+
+      syncText();
+      setTemplate("kinfolk");
+    </script>
   </body>
 </html>
